@@ -7,8 +7,8 @@
     <ProjectGuid>{16ECE939-35D4-4B24-A790-4F349AA38C64}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>KameraSaves</RootNamespace>
-    <AssemblyName>KameraSaves</AssemblyName>
+    <RootNamespace>CameraSaves</RootNamespace>
+    <AssemblyName>CameraSaves</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -66,4 +66,5 @@
 del "%25LOCALAPPDATA%25\Colossal Order\Cities_Skylines\Addons\Mods\$(SolutionName)\$(TargetFileName)"
 xcopy /y "$(TargetPath)" "%25LOCALAPPDATA%25\Colossal Order\Cities_Skylines\Addons\Mods\$(SolutionName)"</PostBuildEvent>
   </PropertyGroup>
+
 </Project>
