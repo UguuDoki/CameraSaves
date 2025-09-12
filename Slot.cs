@@ -1,4 +1,5 @@
-﻿using ColossalFramework.UI;
+using ColossalFramework.UI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -96,38 +97,69 @@ namespace CameraSaves
 		}
 		protected override void OnClick(UIMouseEventParameter p)
 		{
-			tooltipBox.Hide();
-			Unfocus();
-			int index = Data.SlotCurrent = int.Parse(name);
-			Metrics saved = Options.MetricsList[index];
-			Metrics current = Data.MetricsCurrent();
-			if (saved.Position == Vector3.zero)
+			if (p.buttons.IsFlagSet(UIMouseButton.Left))
 			{
-				if (Options.EnableTooltiping)
+				KeyCode[] keys = (KeyCode[])Enum.GetValues(typeof(KeyCode));
+				bool noKeyAtAll = !keys.Any(k => Input.GetKey(k));
+				bool onlyOneAltPressed = (Input.GetKey(KeyCode.LeftAlt) ^ Input.GetKey(KeyCode.RightAlt)) && keys.Where(k => k != KeyCode.LeftAlt && k != KeyCode.RightAlt).All(k => !Input.GetKey(k));
+				if (noKeyAtAll || onlyOneAltPressed)
 				{
-					PopTextField(index);
-				}
-				Save(index, current);
-			}
-			else
-			{
-				bool offSpot =
-					saved.Position != current.Position ||
-					saved.Angle != current.Angle ||
-					saved.Height != current.Height ||
-					saved.Size != current.Size ||
-					saved.FOV != current.FOV;
-				if (offSpot)
-				{
-					Teleport(saved);
-				}
-				else
-				{
-					Delete(index);
+					tooltipBox.Hide();
+					Unfocus();
+					int index = Data.SlotCurrent = int.Parse(name);
+					Metrics saved = Options.MetricsList[index];
+					Metrics current = Data.MetricsCurrent();
+					if (saved.Position == Vector3.zero)
+					{
+						if (Options.EnableTooltiping)
+						{
+							PopTextField(index, current);
+						}
+						Save(index, current);
+					}
+					else
+					{
+						if (noKeyAtAll)
+						{
+							if (saved.Position == Vector3.zero)
+							{
+								if (Options.EnableTooltiping)
+								{
+									PopTextField(index, current);
+								}
+								Save(index, current);
+							}
+							else
+							{
+								bool offSpot =
+									saved.Position != current.Position ||
+									saved.Angle != current.Angle ||
+									saved.Height != current.Height ||
+									saved.Size != current.Size ||
+									saved.FOV != current.FOV;
+								if (offSpot)
+								{
+									Teleport(saved);
+								}
+								else
+								{
+									Delete(index);
+								}
+							}
+						}
+						else
+						{
+							if (Options.EnableTooltiping)
+							{
+								PopTextField(index, current);
+								Save(index, current);
+							}
+						}
+					}
 				}
 			}
 		}
-		private void PopTextField(int index)
+		private void PopTextField(int index, Metrics current)
 		{
 			string existing = Options.MetricsList[index].Tooltip ?? string.Empty;
 			UITextField tf = (UITextField)UIView.GetAView().AddUIComponent(typeof(UITextField));
@@ -146,24 +178,13 @@ namespace CameraSaves
 			tf.padding = new RectOffset(0, 0, 8, 0);
 			tf.textScale = 0.875f;
 			tf.verticalAlignment = UIVerticalAlignment.Middle;
+			tf.Focus();
 			tf.eventTextSubmitted += (s, e) =>
 			{
 				tf.text = Regex.Replace(tf.text, @"\s+", " ").Trim();
-				if (tf.text != existing)
-				{
-					Options.MetricsList[index].Tooltip = tooltip = tf.text == string.Empty ? null : tf.text;
-					try
-					{
-						LocalXml.SaveLocal();
-					}
-					catch
-					{
-						Message.Preset("* Tooltip *");
-					}
-				}
+				current.Tooltip = tooltip = tf.text == string.Empty ? null : tf.text;
 				Destroy(tf.gameObject);
 			};
-			tf.Focus();
 		}
 		private void Save(int index, Metrics current)
 		{
@@ -234,6 +255,7 @@ namespace CameraSaves
 				{
 					LocalXml.SaveLocal();
 					color = hoveredColor = focusedColor = Data.Pale;
+					this.tooltip = null;
 					if (Options.NotifyDeletion)
 					{
 						string msg = "\n" +
