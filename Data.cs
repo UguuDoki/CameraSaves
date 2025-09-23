@@ -4,6 +4,7 @@ using ColossalFramework.Plugins;
 using ColossalFramework.UI;
 using ICities;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -66,13 +67,14 @@ namespace CameraSaves
 			};
 			return metrics;
 		}
+		internal static List<Metrics> MetricsList = new List<Metrics>();
 		internal static readonly string PathGlobal = Path.Combine(DataLocation.localApplicationData, "CameraSaves.xml");
 		internal static string PathLocal;
 		internal static string PathMod()
 		{
 			string assemblyTitle = ((AssemblyTitleAttribute)Attribute.GetCustomAttribute(Assembly.GetExecutingAssembly(), typeof(AssemblyTitleAttribute), false)).Title;
 			string pfid = Singleton<PluginManager>.instance.GetPluginsInfo().FirstOrDefault(z => z.GetInstances<IUserMod>().Length != 0 && z.publishedFileID.AsUInt64 != ulong.MaxValue && z.assembliesString.StartsWith(assemblyTitle))?.publishedFileID.ToString();
-			return "https://steamcommunity.com/sharedfiles/filedetails/?id=" + pfid;
+			return $"https://steamcommunity.com/sharedfiles/filedetails/?id={pfid}";
 		}
 	}
 	public class Metrics
