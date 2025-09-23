@@ -35,7 +35,7 @@ namespace CameraSaves
 		}
 		protected override void OnMouseDown(UIMouseEventParameter p)
 		{
-			if (p.buttons.IsFlagSet(UIMouseButton.Right))
+			if (p.buttons == UIMouseButton.Right)
 			{
 				Input.compositionCursorPos = absolutePosition;
 				BringToFront();
@@ -43,7 +43,7 @@ namespace CameraSaves
 		}
 		protected override void OnMouseMove(UIMouseEventParameter p)
 		{
-			if (p.buttons.IsFlagSet(UIMouseButton.Right))
+			if (p.buttons == UIMouseButton.Right)
 			{
 				Vector2 pointer = Input.mousePosition;
 				pointer.y = UIView.GetAView().fixedHeight - pointer.y;
@@ -62,7 +62,7 @@ namespace CameraSaves
 		}
 		protected override void OnMouseUp(UIMouseEventParameter p)
 		{
-			if (Input.GetMouseButtonUp(1))
+			if (p.buttons == UIMouseButton.Right)
 			{
 				Options.IconPosition = relativePosition;
 				if (Options.DecouplePanel)

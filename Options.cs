@@ -15,11 +15,9 @@ namespace CameraSaves
 		public static bool AlertDeletion = true;
 		public static bool NotifyDeletion = true;
 		public static bool EnableTooltiping = true;
-		public static List<Metrics> MetricsList = new List<Metrics>();
 		public static void CreateOptionsPanel(UIHelper helper)
 		{
-			bool InGame = ToolsModifierControl.toolController != null
-				&& ToolsModifierControl.toolController.gameObject.scene.name != "IntroScreen";
+			bool InGame = ToolsModifierControl.toolController != null && ToolsModifierControl.toolController.gameObject.scene.name != "IntroScreen";
 			UIScrollablePanel sp = (UIScrollablePanel)helper.self;
 			sp.name = "CameraSaves_Options";
 			sp.autoLayout = true;
@@ -31,7 +29,7 @@ namespace CameraSaves
 				UIPanel pn0 = OptionsUI.PanelVertical(sp);
 				{
 					UILabel lb00 = OptionsUI.Label(pn0);
-					lb00.text = "Camera Saves";
+					lb00.text = Mod.name;
 					lb00.textColor = new Color32(240, 230, 140, 255);
 					lb00.textScale = 2f;
 					UIPanel pn00 = OptionsUI.PanelHorizontal(pn0);
@@ -41,7 +39,7 @@ namespace CameraSaves
 						bt000.eventClicked += (s, e) => HowToUse_ButtonClicked();
 						UILabel lb000 = OptionsUI.Label(pn00);
 						lb000.padding = new RectOffset(16, 0, 0, 0);
-						lb000.text = "How To Use\n\n" + Data.PathMod();
+						lb000.text = $"How To Use\n\n{Data.PathMod()}";
 						lb000.textScale = 1.125f;
 					}
 				}
@@ -259,7 +257,7 @@ namespace CameraSaves
 			catch
 			{
 				DecouplePanel = ((UICheckBox)component).isChecked = !((UICheckBox)component).isChecked;
-				Message.Preset("[ " + ((UICheckBox)component).label.text + " ]");
+				Message.Preset($"[ {((UICheckBox)component).label.text} ]");
 			}
 		}
 		private static void OpaquePanel_CheckBoxClicked(UIComponent component)
@@ -275,7 +273,7 @@ namespace CameraSaves
 			catch
 			{
 				OpaquePanel = ((UICheckBox)component).isChecked = !((UICheckBox)component).isChecked;
-				Message.Preset("[ " + ((UICheckBox)component).label.text + " ]");
+				Message.Preset($"[ {((UICheckBox)component).label.text} ]");
 			}
 		}
 		private static void Slots_CheckBoxClicked(UIComponent component)
@@ -310,7 +308,7 @@ namespace CameraSaves
 					CameraSaves_Slot.PopulateSlots(panel);
 					thisCB.isChecked = false;
 					previousCB.isChecked = true;
-					Message.Preset("[ Slots " + ((UICheckBox)component).label.text + " ]");
+					Message.Preset($"[ Slots {((UICheckBox)component).label.text} ]");
 				}
 			}
 		}
@@ -324,7 +322,7 @@ namespace CameraSaves
 			catch
 			{
 				AlertDeletion = ((UICheckBox)component).isChecked = !((UICheckBox)component).isChecked;
-				Message.Preset("[ " + ((UICheckBox)component).label.text + " ]");
+				Message.Preset($"[ {((UICheckBox)component).label.text} ]");
 			}
 		}
 		private static void NotifyDeletion_CheckBoxClicked(UIComponent component)
@@ -337,7 +335,7 @@ namespace CameraSaves
 			catch
 			{
 				NotifyDeletion = ((UICheckBox)component).isChecked = !((UICheckBox)component).isChecked;
-				Message.Preset("[ " + ((UICheckBox)component).label.text + " ]");
+				Message.Preset($"[ {((UICheckBox)component).label.text} ]");
 			}
 		}
 		private static void EnableTooltiping_CheckBoxClicked(UIComponent component)
@@ -350,7 +348,7 @@ namespace CameraSaves
 			catch
 			{
 				EnableTooltiping = ((UICheckBox)component).isChecked = !((UICheckBox)component).isChecked;
-				Message.Preset("[ " + ((UICheckBox)component).label.text + " ]");
+				Message.Preset($"[ {((UICheckBox)component).label.text} ]");
 			}
 		}
 	}

@@ -5,7 +5,7 @@ namespace CameraSaves
 {
 	internal class Message
 	{
-		private static readonly string prefix = "[" + Mod.name + "] ";
+		private static readonly string prefix = $"[{Mod.name}] ";
 		internal static void Custom(string msg)
 		{
 			UIView.library.ShowModal<ExceptionPanel>("ExceptionPanel").SetMessage(prefix, msg, error: false);
@@ -28,11 +28,11 @@ namespace CameraSaves
 		}
 		internal static void F7(string msg)
 		{
-			DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, prefix + msg);
+			DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, $"{prefix}{msg}");
 		}
 		internal static void Output_log(string msg)
 		{
-			Debug.Log(prefix + msg);
+			Debug.Log($"{prefix}{msg}");
 		}
 	}
 }

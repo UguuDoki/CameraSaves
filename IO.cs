@@ -76,7 +76,7 @@ namespace CameraSaves
 					using (FileStream fs = new FileStream(Data.PathLocal, FileMode.Open))
 					{
 						LocalXml xml = (LocalXml)serializer.Deserialize(fs);
-						Options.MetricsList = xml.MetricsList ?? new List<Metrics>();
+						Data.MetricsList = xml.MetricsList ?? new List<Metrics>();
 					}
 				}
 				catch
@@ -89,7 +89,7 @@ namespace CameraSaves
 		{
 			LocalXml xml = new LocalXml
 			{
-				MetricsList = Options.MetricsList ?? new List<Metrics>()
+				MetricsList = Data.MetricsList ?? new List<Metrics>()
 			};
 			XmlSerializer serializer = new XmlSerializer(typeof(LocalXml));
 			using (FileStream fs = new FileStream(Data.PathLocal, FileMode.Create))

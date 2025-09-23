@@ -22,7 +22,7 @@ namespace CameraSaves
 				if (mode == LoadMode.LoadGame || mode == LoadMode.NewGame)
 				{
 					string cityName = Singleton<SimulationManager>.instance.m_metaData.m_CityName;
-					Data.PathLocal = Path.Combine(DataLocation.localApplicationData, "CameraSaves_" + cityName + ".xml");
+					Data.PathLocal = Path.Combine(DataLocation.localApplicationData, $"CameraSaves_{cityName}.xml");
 					LocalXml.LoadLocal();
 					_ = UIView.GetAView().AddUIComponent(typeof(CameraSaves_Icon));
 				}
