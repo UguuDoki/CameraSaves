@@ -51,11 +51,11 @@ namespace CameraSaves
 			playAudioEvents = true;
 			int index = int.Parse(name);
 			InitMetrics(index);
-			tooltip = Options.MetricsList[index].Tooltip ?? string.Empty;
+			tooltip = Data.MetricsList[index].Tooltip ?? string.Empty;
 		}
 		private void InitMetrics(int index)
 		{
-			List<Metrics> list = Options.MetricsList;
+			List<Metrics> list = Data.MetricsList;
 			Metrics saved = list.FirstOrDefault(z => z.Slot == index);
 			if (saved != null)
 			{
@@ -79,25 +79,10 @@ namespace CameraSaves
 		protected override void OnMouseLeave(UIMouseEventParameter p)
 		{
 			textColor = Color.white;
-			if (tooltip == "?")
-			{
-				tooltip = string.Empty;
-			}
-		}
-		protected override void OnMouseHover(UIMouseEventParameter p)
-		{
-			if (color.Equals(Data.Shaded) && Options.EnableTooltiping)
-			{
-				if (tooltip == string.Empty)
-				{
-					tooltip = "?";
-				}
-				tooltipBox.Show(bringToFront: true);
-			}
 		}
 		protected override void OnClick(UIMouseEventParameter p)
 		{
-			if (p.buttons.IsFlagSet(UIMouseButton.Left))
+			if (p.buttons == UIMouseButton.Left)
 			{
 				KeyCode[] keys = (KeyCode[])Enum.GetValues(typeof(KeyCode));
 				bool noKeyAtAll = !keys.Any(k => Input.GetKey(k));
@@ -107,61 +92,56 @@ namespace CameraSaves
 					tooltipBox.Hide();
 					Unfocus();
 					int index = Data.SlotCurrent = int.Parse(name);
-					Metrics saved = Options.MetricsList[index];
+					Metrics saved = Data.MetricsList[index];
 					Metrics current = Data.MetricsCurrent();
 					if (saved.Position == Vector3.zero)
 					{
 						if (Options.EnableTooltiping)
 						{
-							PopTextField(index, current);
+							PopTextField(index);
 						}
-						Save(index, current);
+						else
+						{
+							Save(index);
+						}
 					}
 					else
 					{
 						if (noKeyAtAll)
 						{
-							if (saved.Position == Vector3.zero)
+							bool offSpot =
+								saved.Position != current.Position ||
+								saved.Angle != current.Angle ||
+								saved.Height != current.Height ||
+								saved.Size != current.Size ||
+								saved.FOV != current.FOV;
+							if (offSpot)
 							{
-								if (Options.EnableTooltiping)
-								{
-									PopTextField(index, current);
-								}
-								Save(index, current);
+								Teleport(saved);
 							}
 							else
 							{
-								bool offSpot =
-									saved.Position != current.Position ||
-									saved.Angle != current.Angle ||
-									saved.Height != current.Height ||
-									saved.Size != current.Size ||
-									saved.FOV != current.FOV;
-								if (offSpot)
-								{
-									Teleport(saved);
-								}
-								else
-								{
-									Delete(index);
-								}
+								Delete(index);
 							}
 						}
 						else
 						{
 							if (Options.EnableTooltiping)
 							{
-								PopTextField(index, current);
-								Save(index, current);
+								PopTextField(index);
+							}
+							else
+							{
+								Save(index);
 							}
 						}
 					}
 				}
 			}
 		}
-		private void PopTextField(int index, Metrics current)
+		private void PopTextField(int index)
 		{
-			string existing = Options.MetricsList[index].Tooltip ?? string.Empty;
+			string existing = Data.MetricsList[index].Tooltip ?? string.Empty;
 			UITextField tf = (UITextField)UIView.GetAView().AddUIComponent(typeof(UITextField));
 			tf.autoSize = false;
 			tf.builtinKeyNavigation = true;
@@ -182,13 +162,15 @@ namespace CameraSaves
 			tf.eventTextSubmitted += (s, e) =>
 			{
 				tf.text = Regex.Replace(tf.text, @"\s+", " ").Trim();
-				current.Tooltip = tooltip = tf.text == string.Empty ? null : tf.text;
+				tooltip = tf.text;
 				Destroy(tf.gameObject);
+				Save(index);
 			};
 		}
-		private void Save(int index, Metrics current)
+		private void Save(int index)
 		{
-			Options.MetricsList[index] = current;
+			Data.MetricsList[index] = Data.MetricsCurrent();
+			Data.MetricsList[index].Tooltip = tooltip;
 			try
 			{
 				LocalXml.SaveLocal();
@@ -226,10 +208,10 @@ namespace CameraSaves
 		{
 			if (Options.AlertDeletion)
 			{
-				string tooltip = Options.MetricsList[index].Tooltip ?? string.Empty;
+				string tooltip = Data.MetricsList[index].Tooltip ?? string.Empty;
 				string msg = (string.IsNullOrEmpty(tooltip)
 					? string.Empty
-					: ("* " + tooltip + " *\n\n"))
+					: $"* {tooltip} *\n\n")
 					+ "Delete current camera?";
 				alert(msg);
 				void alert(string message)
@@ -250,7 +232,7 @@ namespace CameraSaves
 			}
 			void delete(string tooltip)
 			{
-				Options.MetricsList[index] = new Metrics() { Slot = index };
+				Data.MetricsList[index] = new Metrics() { Slot = index };
 				try
 				{
 					LocalXml.SaveLocal();
@@ -259,7 +241,7 @@ namespace CameraSaves
 					if (Options.NotifyDeletion)
 					{
 						string msg = "\n" +
-							(string.IsNullOrEmpty(tooltip) ? "\n" : ("* " + tooltip + " *\n\n\n")) +
+							(string.IsNullOrEmpty(tooltip) ? "\n" : $"* {tooltip} *\n\n\n") +
 							"Current camera deleted.\n\n" +
 							"Slot ready for a new save.";
 						Message.Custom(msg);
