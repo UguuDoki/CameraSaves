@@ -43,6 +43,7 @@ namespace CameraSaves
 		internal const int BlockHeight = SlotRowsPerBlock * (SlotSide + SlotSpacing);
 		internal static readonly Color32 Pale = new Color32(188, 190, 192, 255);
 		internal static readonly Color32 Shaded = new Color32(109, 110, 113, 255);
+		internal static readonly Color32 Lime = new Color32(0, 255, 0, 255);
 		internal const int SlotSide = 20;
 		internal const int SlotColumnsPerBlock = 5;
 		internal const int SlotRowsPerBlock = 2;

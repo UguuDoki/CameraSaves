@@ -1,7 +1,9 @@
 ﻿using ColossalFramework.UI;
 using System;
-//using System.Collections.Generic;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine;
 namespace CameraSaves
@@ -75,11 +77,51 @@ namespace CameraSaves
 			{
 				textColor = Data.Shaded;
 			}
+			else
+			{
+				int index = Data.SlotCurrent = int.Parse(name);
+				Metrics saved = Data.MetricsList[index];
+				Metrics current = Data.MetricsCurrent();
+				bool offSpot =
+					saved.Position != current.Position ||
+					saved.Angle != current.Angle ||
+					saved.Height != current.Height ||
+					saved.Size != current.Size ||
+					saved.FOV != current.FOV;
+				if (!offSpot)
+				{
+					textColor = Data.Lime;
+					if (Options.EnableTooltiping)
+					{
+						tooltipBox.Show();
+						_ = UIView.GetAView().StartCoroutine(TooltipTextColorDelayed());
+					}
+				}
+			}
+		}
+		private IEnumerator TooltipTextColorDelayed()
+		{
+			yield return null;
+			TooltipTextColor(Data.Lime);
+		}
+		private void TooltipTextColor(Color32 textColor)
+		{
+			FieldInfo tooltipBoxField = typeof(UIButton).GetField("m_TooltipBox", BindingFlags.NonPublic | BindingFlags.Instance);
+			object tooltipBox = tooltipBoxField.GetValue(this);
+			FieldInfo textColorField = tooltipBox.GetType().GetField("m_TextColor", BindingFlags.NonPublic | BindingFlags.Instance);
+			textColorField.SetValue(tooltipBox, textColor);
 		}
 		protected override void OnMouseLeave(UIMouseEventParameter p)
 		{
 			textColor = Color.white;
+			if (Options.EnableTooltiping)
+			{
+				TooltipTextColor(Color.white);
+			}
 		}
+		private static Metrics CutMetrics = null;
+		private static int CutSlot = 0;
+		private static UIButton CutButton = null;
 		protected override void OnClick(UIMouseEventParameter p)
 		{
 			if (p.buttons == UIMouseButton.Left)
@@ -87,44 +129,17 @@ namespace CameraSaves
 				KeyCode[] keys = (KeyCode[])Enum.GetValues(typeof(KeyCode));
 				bool noKeyAtAll = !keys.Any(k => Input.GetKey(k));
 				bool onlyOneAltPressed = (Input.GetKey(KeyCode.LeftAlt) ^ Input.GetKey(KeyCode.RightAlt)) && keys.Where(k => k != KeyCode.LeftAlt && k != KeyCode.RightAlt).All(k => !Input.GetKey(k));
-				if (noKeyAtAll || onlyOneAltPressed)
+				bool onlyOneShiftPressed = (Input.GetKey(KeyCode.LeftShift) ^ Input.GetKey(KeyCode.RightShift)) && keys.Where(k => k != KeyCode.LeftShift && k != KeyCode.RightShift).All(k => !Input.GetKey(k));
+				if (noKeyAtAll || onlyOneAltPressed || onlyOneShiftPressed)
 				{
 					tooltipBox.Hide();
 					Unfocus();
 					int index = Data.SlotCurrent = int.Parse(name);
 					Metrics saved = Data.MetricsList[index];
 					Metrics current = Data.MetricsCurrent();
-					if (saved.Position == Vector3.zero)
+					if (noKeyAtAll || onlyOneAltPressed)
 					{
-						if (Options.EnableTooltiping)
-						{
-							PopTextField(index);
-						}
-						else
-						{
-							Save(index);
-						}
-					}
-					else
-					{
-						if (noKeyAtAll)
-						{
-							bool offSpot =
-								saved.Position != current.Position ||
-								saved.Angle != current.Angle ||
-								saved.Height != current.Height ||
-								saved.Size != current.Size ||
-								saved.FOV != current.FOV;
-							if (offSpot)
-							{
-								Teleport(saved);
-							}
-							else
-							{
-								Delete(index);
-							}
-						}
-						else
+						if (saved.Position == Vector3.zero)
 						{
 							if (Options.EnableTooltiping)
 							{
@@ -133,6 +148,63 @@ namespace CameraSaves
 							else
 							{
 								Save(index);
+							}
+						}
+						else
+						{
+							if (noKeyAtAll)
+							{
+								bool offSpot =
+									saved.Position != current.Position ||
+									saved.Angle != current.Angle ||
+									saved.Height != current.Height ||
+									saved.Size != current.Size ||
+									saved.FOV != current.FOV;
+								if (offSpot)
+								{
+									Teleport(saved);
+								}
+								else
+								{
+									Delete(index);
+								}
+							}
+							else
+							{
+								if (Options.EnableTooltiping)
+								{
+									PopTextField(index);
+								}
+								else
+								{
+									Save(index);
+								}
+							}
+						}
+					}
+					else if (onlyOneShiftPressed)
+					{
+						Message.F7("1");
+						if (CutMetrics == null)
+						{
+							Message.F7("2");
+							CutMetrics = color.Equals(Data.Shaded) ? saved : new Metrics();
+							CutSlot = CutMetrics.Slot;
+							CutButton = this;
+						}
+						else
+						{
+							if (CutSlot == index)
+							{
+								Message.F7("3");
+								CutMetrics = null;
+								CutSlot = 0;
+								CutButton = null;
+							}
+							else
+							{
+								Message.F7("4");
+								Paste(index);
 							}
 						}
 					}
@@ -154,10 +226,30 @@ namespace CameraSaves
 			tf.width = Data.TooltipTextFieldWidth;
 			tf.height = Data.TooltipTextFieldHeight;
 			tf.submitOnFocusLost = true;
-			tf.text = existing;
 			tf.padding = new RectOffset(0, 0, 8, 0);
+			tf.text = existing;
 			tf.textScale = 0.875f;
 			tf.verticalAlignment = UIVerticalAlignment.Middle;
+			tf.eventGotFocus += (c, p) => _ = tf.StartCoroutine(OnFocus());
+			IEnumerator OnFocus()
+			{
+				yield return null;
+				tf.selectionStart = tf.selectionEnd = tf.text.Length;
+				tf.MoveToSelectionEnd();
+			}
+			_ = tf.StartCoroutine(OnEsc());
+			IEnumerator OnEsc()
+			{
+				while (tf != null && tf.isVisible)
+				{
+					if (Input.GetKeyDown(KeyCode.Escape))
+					{
+						Destroy(tf.gameObject);
+						yield break;
+					}
+					yield return null;
+				}
+			}
 			tf.Focus();
 			tf.eventTextSubmitted += (s, e) =>
 			{
@@ -175,6 +267,38 @@ namespace CameraSaves
 			{
 				LocalXml.SaveLocal();
 				color = hoveredColor = pressedColor = focusedColor = Data.Shaded;
+			}
+			catch
+			{
+				Message.Preset("- Camera -");
+			}
+		}
+		private void Paste(int index)
+		{
+			Message.F7("5");
+			CutMetrics.Slot = index;
+			Data.MetricsList[index] = CutMetrics;
+			Data.MetricsList[CutSlot] = new Metrics();
+			try
+			{
+				Message.F7("6");
+				LocalXml.SaveLocal();
+				if (CutButton.color.Equals(Data.Shaded))
+				{
+					Message.F7("7");
+					color = hoveredColor = pressedColor = focusedColor = Data.Shaded;
+					tooltip = Data.MetricsList[index].Tooltip;
+					CutButton.color = CutButton.hoveredColor = CutButton.pressedColor = CutButton.focusedColor = Data.Pale;
+				}
+				else
+				{
+					Message.F7("8");
+					color = hoveredColor = pressedColor = focusedColor = Data.Pale;
+				}
+				Message.F7("9");
+				CutMetrics = null;
+				CutSlot = 0;
+				CutButton = null;
 			}
 			catch
 			{
