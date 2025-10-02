@@ -79,23 +79,27 @@ namespace CameraSaves
 			}
 			else
 			{
-				int index = Data.SlotCurrent = int.Parse(name);
-				Metrics saved = Data.MetricsList[index];
-				Metrics current = Data.MetricsCurrent();
-				bool offSpot =
-					saved.Position != current.Position ||
-					saved.Angle != current.Angle ||
-					saved.Height != current.Height ||
-					saved.Size != current.Size ||
-					saved.FOV != current.FOV;
-				if (!offSpot)
+				ShadedSlotHoveredStyle();
+			}
+		}
+		private void ShadedSlotHoveredStyle()
+		{
+			int index = Data.SlotCurrent = int.Parse(name);
+			Metrics saved = Data.MetricsList[index];
+			Metrics current = Data.MetricsCurrent();
+			bool offSpot =
+				saved.Position != current.Position ||
+				saved.Angle != current.Angle ||
+				saved.Height != current.Height ||
+				saved.Size != current.Size ||
+				saved.FOV != current.FOV;
+			if (!offSpot)
+			{
+				textColor = Data.Lime;
+				if (Options.EnableTooltiping)
 				{
-					textColor = Data.Lime;
-					if (Options.EnableTooltiping)
-					{
-						tooltipBox.Show();
-						_ = UIView.GetAView().StartCoroutine(TooltipTextColorDelayed());
-					}
+					tooltipBox.Show();
+					_ = UIView.GetAView().StartCoroutine(TooltipTextColorDelayed());
 				}
 			}
 		}
@@ -163,6 +167,7 @@ namespace CameraSaves
 								if (offSpot)
 								{
 									Teleport(saved);
+									ShadedSlotHoveredStyle();
 								}
 								else
 								{
@@ -184,10 +189,8 @@ namespace CameraSaves
 					}
 					else if (onlyOneShiftPressed)
 					{
-						Message.F7("1");
 						if (CutMetrics == null)
 						{
-							Message.F7("2");
 							CutMetrics = color.Equals(Data.Shaded) ? saved : new Metrics();
 							CutSlot = CutMetrics.Slot;
 							CutButton = this;
@@ -196,14 +199,12 @@ namespace CameraSaves
 						{
 							if (CutSlot == index)
 							{
-								Message.F7("3");
 								CutMetrics = null;
 								CutSlot = 0;
 								CutButton = null;
 							}
 							else
 							{
-								Message.F7("4");
 								Paste(index);
 							}
 						}
@@ -267,6 +268,7 @@ namespace CameraSaves
 			{
 				LocalXml.SaveLocal();
 				color = hoveredColor = pressedColor = focusedColor = Data.Shaded;
+				ShadedSlotHoveredStyle();
 			}
 			catch
 			{
@@ -275,27 +277,23 @@ namespace CameraSaves
 		}
 		private void Paste(int index)
 		{
-			Message.F7("5");
 			CutMetrics.Slot = index;
 			Data.MetricsList[index] = CutMetrics;
 			Data.MetricsList[CutSlot] = new Metrics();
 			try
 			{
-				Message.F7("6");
 				LocalXml.SaveLocal();
 				if (CutButton.color.Equals(Data.Shaded))
 				{
-					Message.F7("7");
 					color = hoveredColor = pressedColor = focusedColor = Data.Shaded;
 					tooltip = Data.MetricsList[index].Tooltip;
+					ShadedSlotHoveredStyle();
 					CutButton.color = CutButton.hoveredColor = CutButton.pressedColor = CutButton.focusedColor = Data.Pale;
 				}
 				else
 				{
-					Message.F7("8");
 					color = hoveredColor = pressedColor = focusedColor = Data.Pale;
 				}
-				Message.F7("9");
 				CutMetrics = null;
 				CutSlot = 0;
 				CutButton = null;
